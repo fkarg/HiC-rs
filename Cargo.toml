@@ -1,15 +1,16 @@
 [package]
-name = "hic-rs"
+name = "hicrs"
 version = "0.1.0"
 authors = ["fkarg <f.karg10@gmail.com>"]
 edition = "2018"
 
 
 [lib]
-name = "string_sum"
-crate-type = ["cdylib"]
+name = "hicrs"
+crate-type = ["dylib", "staticlib"]
 
 
-[dependencies.pyo3]
-version = "0.6.0-alpha.4"
-features = ["extension-module"]
+[dependencies]
+libc = "0.2.49"
+
+
