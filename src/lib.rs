@@ -37,8 +37,8 @@ fn listtest(array: Array) -> Array {
     // let nums = unsafe { slice::from_raw_parts(data, length as usize) };
     let nums = unsafe { array.as_u32_slice() };
     let data: Vec<u32> = nums.iter().map(|a| a * a).collect();
-	println!("Rust worked fine.");
-	Array::from_vec(data)
+    println!("Rust worked fine.");
+    Array::from_vec(data)
 }
 
 
@@ -56,22 +56,22 @@ pub struct Array {
 
 impl Array {
     unsafe fn as_u32_slice(&self) -> &[u32] {
-		assert!(!self.data.is_null());
-		slice::from_raw_parts(self.data as *const u32, self.len as usize)
-	}
+        assert!(!self.data.is_null());
+        slice::from_raw_parts(self.data as *const u32, self.len as usize)
+    }
 
     fn from_vec<T>(mut vec: Vec<T>) -> Array {
-		// Important to make length and capacity match
-		// A better solution is to track both length and capacity
-    	vec.shrink_to_fit();
+        // Important to make length and capacity match
+        // A better solution is to track both length and capacity
+        vec.shrink_to_fit();
 
-    	let array = Array { data: vec.as_ptr() as *const
-    		libc::c_void, len: vec.len() as libc::size_t };
+        let array = Array { data: vec.as_ptr() as *const
+            libc::c_void, len: vec.len() as libc::size_t };
 
-    	// Whee! Leak the memory, and now the raw pointer (and eventually C) is the owner.
-    	mem::forget(vec);
-		array
-	}
+        // Whee! Leak the memory, and now the raw pointer (and eventually C) is the owner.
+        mem::forget(vec);
+        array
+    }
 }
 
 
@@ -80,12 +80,12 @@ pub extern fn convert_vec(lon: Array, lat: Array) -> Array {
     let lon = unsafe { lon.as_u32_slice() };
     let lat = unsafe { lat.as_u32_slice() };
 
-	let vec =
+    let vec =
         lat.iter().zip(lon.iter())
-		   .map(|(&lat, &lon)| Tuple { a: lat, b: lon })
+           .map(|(&lat, &lon)| Tuple { a: lat, b: lon })
            .collect();
 
-	Array::from_vec(vec)
+    Array::from_vec(vec)
 }
 
 
