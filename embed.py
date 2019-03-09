@@ -8,6 +8,9 @@ class FFITuple(ctypes.Structure):
     _fields_ = [("a", ctypes.c_uint32),
                 ("b", ctypes.c_uint32)]
 
+    def __repr__(self):
+        return "({}, {})".format(self.a, self.b)
+
 class FFIArray(ctypes.Structure):
     _fields_ = [("data", ctypes.c_void_p),
                 ("len", ctypes.c_size_t)]
@@ -32,10 +35,14 @@ def void_array_to_tuple_list(array, _func, _args):
     tuple_array = ctypes.cast(array.data, ctypes.POINTER(FFITuple))
     return [tuple_array[i] for i in range(0, array.len)]
 
+
 def void_array_to_list(array, _func, _args):
     l = array.len
     a = ctypes.cast(array.data, ctypes.POINTER(ctypes.c_int))
     return [a[i] for i in range(l)]
+
+
+
 
 try:
     lib = ctypes.cdll.LoadLibrary("./target/release/libhicrs.so")
@@ -43,8 +50,6 @@ try:
 except Exception as e:
     lib = ctypes.cdll.LoadLibrary("./target/debug/libhicrs.so")
     print("using debug rs")
-
-print("done!")
 
 
 

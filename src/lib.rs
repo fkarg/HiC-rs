@@ -37,7 +37,6 @@ fn listtest(array: Array) -> Array {
     // let nums = unsafe { slice::from_raw_parts(data, length as usize) };
     let nums = unsafe { array.as_u32_slice() };
     let data: Vec<u32> = nums.iter().map(|a| a * a).collect();
-    println!("Rust worked fine.");
     Array::from_vec(data)
 }
 
