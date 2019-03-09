@@ -32,10 +32,17 @@ def void_array_to_tuple_list(array, _func, _args):
     tuple_array = ctypes.cast(array.data, ctypes.POINTER(FFITuple))
     return [tuple_array[i] for i in range(0, array.len)]
 
+def void_array_to_list(array, _func, _args):
+    l = array.len
+    a = ctypes.cast(array.data, ctypes.POINTER(ctypes.c_int))
+    return [a[i] for i in range(l)]
 
-
-# lib = ctypes.cdll.LoadLibrary("./target/release/libhicrs.so")
-lib = ctypes.cdll.LoadLibrary("./target/debug/libhicrs.so")
+try:
+    lib = ctypes.cdll.LoadLibrary("./target/release/libhicrs.so")
+    print("using release rs")
+except Exception as e:
+    lib = ctypes.cdll.LoadLibrary("./target/debug/libhicrs.so")
+    print("using debug rs")
 
 print("done!")
 
@@ -44,9 +51,12 @@ print("done!")
 # lib.listtest.argtypes = (ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t)
 lib.listtest.argtypes = FFIArray,
 lib.listtest.restype = FFIArray
-lib.listtest.errcheck = void_array_to_tuple_list
+lib.listtest.errcheck = void_array_to_list
+# lib.listtest.argtypes = (ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t)
+# lib.listtest.restype = (ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t)
+# lib.listtest.errcheck = void_array_to_tuple_list
 
 list_to_sum = [1,2,3,4]
 c_array = (ctypes.c_int32 * len(list_to_sum))(*list_to_sum)
 l = lib.listtest(c_array, len(list_to_sum))
-
+print(l)
