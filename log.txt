@@ -1,7 +1,5 @@
-Meeting 2019-03-04
 
 primary:
-- start using setuptools-rust or similiar (stable)
 - conda package in channel creation
 - notebook look at HiC-data
 
@@ -16,7 +14,11 @@ hicinfo.py
 
 Work done:
 
-2019-03-40:
+2019-03-11:
+- start using setuptools-rust or similiar (stable)
+
+
+2019-03-04:
 compared different ways to use rust from python
 main three ways:
 - pyO3: more or less impossible to write idiomatic rust. requires nightly.
