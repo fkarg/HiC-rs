@@ -1,4 +1,6 @@
 import ctypes
+import numpy as np
+from scipy.sparse import csr_matrix
 
 # lib.process()
 
@@ -29,6 +31,9 @@ class FFIArray(ctypes.Structure):
         self.data = ctypes.cast(raw_seq, ctypes.c_void_p)
         self.len = len(seq)
 
+    def __len__(self):
+        return self.len
+
 # A conversion function that cleans up the result value to make it
 # nicer to consume.
 def void_array_to_tuple_list(array, _func, _args):
@@ -36,7 +41,7 @@ def void_array_to_tuple_list(array, _func, _args):
     return [tuple_array[i] for i in range(0, array.len)]
 
 
-def void_array_to_list(array, _func, _args):
+def void_array_to_list(array, _func = None, _args = None):
     l = array.len
     a = ctypes.cast(array.data, ctypes.POINTER(ctypes.c_int))
     return [a[i] for i in range(l)]
@@ -62,6 +67,29 @@ lib.listtest.errcheck = void_array_to_list
 # lib.listtest.errcheck = void_array_to_tuple_list
 
 list_to_sum = [1,2,3,4]
-c_array = (ctypes.c_int32 * len(list_to_sum))(*list_to_sum)
-l = lib.listtest(c_array, len(list_to_sum))
+
+def cast_c(l):
+    return (ctypes.c_int32 * len(l))(*l)
+
+# l = lib.listtest(cast_c(list_to_sum), len(list_to_sum))
+l = lib.listtest(list_to_sum)
 print(l)
+
+
+row = np.array([0, 0, 1, 2, 2, 2])
+col = np.array([0, 2, 2, 0, 1, 2])
+data = np.array([1, 2, 3, 4, 5, 6])
+
+
+matrix = csr_matrix((data, (row, col)), shape=(3, 3))
+
+assert list(matrix.indptr) == list(np.array([0, 2, 3, 6]))
+assert list(matrix.indices) == list(np.array([0, 2, 2, 0, 1, 2]))
+
+
+lib.csrtest.argtypes = FFIArray, FFIArray, FFIArray
+lib.csrtest.restype = FFIArray
+lib.csrtest.errcheck = void_array_to_list
+
+e = lib.csrtest(matrix.indptr, matrix.indices, matrix.data)
+print(e)
