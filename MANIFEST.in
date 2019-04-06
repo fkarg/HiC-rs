@@ -1,0 +1,2 @@
+include stochastic-matrix-balancing/target/release/*.so
+include stochastic-matrix-balancing/target/debug/*.so
