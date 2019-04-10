@@ -1,5 +1,7 @@
 language: python
 
+python: 3.6
+
 install:
     #   - curl https://sh.rustup.rs -sSf | sh -s -- -y
     #   - source $HOME/.cargo/env
