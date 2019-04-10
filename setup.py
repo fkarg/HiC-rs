@@ -11,14 +11,17 @@ EXT = sys.platform == "darwin" and ".dylib" or ".so"
 
 def vendor_rust_deps():
     try:
+        print("trying to run subprocess")
         subprocess.run("cargo --version".split(" "))
+        print("ran subprocess")
     except (FileNotFoundError, subprocess.CalledProcessError):
-        subprocess.Popen(
-            "curl https://sh.rustup.rs -sSf | sh",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-        )
+        os.system("curl https://sh.rustup.rs -sSf | sh -s -- -y")
+        # ps = subprocess.Popen(
+        #     "curl https://sh.rustup.rs -sSf".split(" "),
+        #     stdout=subprocess.PIPE)
+        # output = subprocess.check_output("sh -y".split(" "), stdin=ps.stdout, shell=True)
+        # ps.wait()
+
         # subprocess.run('curl https://sh.rustup.rs -sSf | sh'.split(' '))
 
 
@@ -34,6 +37,7 @@ def add_dll_module():
 
 
 def build_native(spec):
+    vendor_rust_deps()
     cmd = "cargo build".split(" ")
     if not DEBUG_BUILD:
         cmd.append("--release")
