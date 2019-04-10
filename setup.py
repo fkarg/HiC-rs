@@ -16,7 +16,7 @@ def vendor_rust_deps():
         print("ran subprocess")
     except (FileNotFoundError, subprocess.CalledProcessError):
         os.system("curl https://sh.rustup.rs -sSf | sh -s -- -y")
-        os.system("source $HOME/.cargo/env")
+        os.system(". $HOME/.cargo/env")
         # ps = subprocess.Popen(
         #     "curl https://sh.rustup.rs -sSf".split(" "),
         #     stdout=subprocess.PIPE)
