@@ -5,18 +5,21 @@ import subprocess
 import sys
 import os
 
-DEBUG_BUILD = os.environ.get('DEBUG') == '1'
-EXT = sys.platform == 'darwin' and '.dylib' or '.so'
-
-
+DEBUG_BUILD = os.environ.get("DEBUG") == "1"
+EXT = sys.platform == "darwin" and ".dylib" or ".so"
 
 
 def vendor_rust_deps():
     try:
-        subprocess.run('cargo --version'.split(' '))
+        subprocess.run("cargo --version".split(" "))
     except (FileNotFoundError, subprocess.CalledProcessError):
-        subprocess.run('curl https://sh.rustup.rs -sSf | sh'.split(' '))
-
+        subprocess.Popen(
+            "curl https://sh.rustup.rs -sSf | sh",
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        # subprocess.run('curl https://sh.rustup.rs -sSf | sh'.split(' '))
 
 
 class CustomSDist(sdist):
@@ -25,33 +28,27 @@ class CustomSDist(sdist):
         sdist.run(self)
 
 
-
 def add_dll_module():
     pass
     shutil.copy2(dylib, os.path.join(base_path, self.lib_filename))
 
 
-
-
 def build_native(spec):
-    cmd = 'cargo build'.split(' ')
+    cmd = "cargo build".split(" ")
     if not DEBUG_BUILD:
-        cmd.append('--release')
-        target = 'release'
+        cmd.append("--release")
+        target = "release"
     else:
-        target = 'debug'
+        target = "debug"
 
-    rust_path = 'smb'
+    rust_path = "smb"
 
-    print('running %s (%s target)' % (' '.join(cmd), target))
-    build = spec.add_external_build(
-            cmd=cmd,
-            path=rust_path
-            )
+    print("running %s (%s target)" % (" ".join(cmd), target))
+    build = spec.add_external_build(cmd=cmd, path=rust_path)
 
-    rtld_flags = ['NOW']
-    if sys.platform == 'darwin':
-        rtld_flags.append('NODELETE')
+    rtld_flags = ["NOW"]
+    if sys.platform == "darwin":
+        rtld_flags.append("NODELETE")
     # spec.add_cffi_module(
     #         module_path='smb._hicrs',
     #         dylib=lambda: build.find_dylib('hicrs', in_path='target/release'),
@@ -60,37 +57,21 @@ def build_native(spec):
     #         )
 
 
-
-
-
-
-
-setup(name='smb',
-      version='0.1',
-      description='Fast stochastic matrix balancing in Rust',
-      url='http://github.com/fkarg/HiC-rs',
-      author='Felix Karg',
-      author_email='kargf@informatik.uni-freiburg.de',
-      license='GPLv3',
-      packages=find_packages(),
-      include_package_data=True,
-      package_data={'': [
-          'smb/target/release/*' + EXT,
-          'smb/target/debug/*' + EXT,
-          ]},
-      zip_safe=False,
-#       platforms='any',
-      install_requires = [
-          'milksnake>=0.1.2',
-      ],
-      setup_requires = [
-          'milksnake>=0.1.2',
-      ],
-      milksnake_tasks=[
-          build_native,
-      ],
-      cmdclass={
-          'sdist': CustomSDist,
-      }
+setup(
+    name="smb",
+    version="0.1",
+    description="Fast stochastic matrix balancing in Rust",
+    url="http://github.com/fkarg/HiC-rs",
+    author="Felix Karg",
+    author_email="kargf@informatik.uni-freiburg.de",
+    license="GPLv3",
+    packages=find_packages(),
+    include_package_data=True,
+    package_data={"": ["smb/target/release/*" + EXT, "smb/target/debug/*" + EXT]},
+    zip_safe=False,
+    #       platforms='any',
+    install_requires=["milksnake>=0.1.2"],
+    setup_requires=["milksnake>=0.1.2"],
+    milksnake_tasks=[build_native],
+    cmdclass={"sdist": CustomSDist},
 )
-
