@@ -1,0 +1,20 @@
+language: python
+
+matrix:
+    fast_finish: true
+    include:
+        - python: "3.6"
+        - python: "3.8"
+
+install:
+    #   - curl https://sh.rustup.rs -sSf | sh -s -- -y
+    #   - source $HOME/.cargo/env
+    #   - export PYTHON_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+    #   - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
+  - python setup.py sdist
+  - python setup.py bdist
+  - python setup.py bdist_wheel
+  - python setup.py install
+  - pip install .
+  - python -c 'import smb'
+

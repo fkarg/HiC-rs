@@ -1,2 +1,4 @@
-include stochastic-matrix-balancing/target/release/*.so
-include stochastic-matrix-balancing/target/debug/*.so
+
+recursive-include smb/target *.so
+recursive-include smb/target *.dylib
+

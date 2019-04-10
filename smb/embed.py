@@ -47,13 +47,20 @@ def void_array_to_list(array, _func = None, _args = None):
     return [a[i] for i in range(l)]
 
 
+import os
+
+my_path = os.path.abspath(os.path.dirname(__file__))
+print(my_path)
+
+path = os.path.join(my_path, 'target/%s/libhicrs.so')
+print(path)
 
 
 try:
-    lib = ctypes.cdll.LoadLibrary("./target/release/libhicrs.so")
+    lib = ctypes.cdll.LoadLibrary(path % 'release')
     print("using release rs")
 except Exception as e:
-    lib = ctypes.cdll.LoadLibrary("./target/debug/libhicrs.so")
+    lib = ctypes.cdll.LoadLibrary(path % 'debug')
     print("using debug rs")
 
 
