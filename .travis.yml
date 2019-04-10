@@ -1,4 +1,4 @@
-language: python rust
+language: python
 
 python: 3.6
 
@@ -6,6 +6,12 @@ os:
   - linux
   - osx
  
+before_install:
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y
+  - source $HOME/.cargo/env
+  - . $HOME/.cargo/env
+  - export PATH=$HOME/.cargo/bin:$PATH
+
 
 install:
     #   - curl https://sh.rustup.rs -sSf | sh -s -- -y
