@@ -63,6 +63,9 @@ def build_native(spec):
     #         )
 
 
+with open("requirements.txt") as f:
+    requirements = f.read().splitlines()
+
 setup(
     name="smb",
     version="0.1",
@@ -76,7 +79,7 @@ setup(
     package_data={"": ["smb/target/release/*" + EXT, "smb/target/debug/*" + EXT]},
     zip_safe=False,
     #       platforms='any',
-    install_requires=["milksnake>=0.1.2"],
+    install_requires=requirements,
     setup_requires=["milksnake>=0.1.2"],
     milksnake_tasks=[build_native],
     cmdclass={"sdist": CustomSDist},
