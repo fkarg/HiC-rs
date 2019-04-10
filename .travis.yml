@@ -1,13 +1,22 @@
+
+
 language: python
 
-python: 3.6
+matrix:
+  include:
+    - name: "Python 3.7 on Linux"
+      os: linux
+      python: 3.7
+      dist: xenial
+    - name: "Python 3.7 on MacOs"
+      os: osx
+      osx_image: xcode10.2
+      language: shell
 
-os:
-  - linux
-  - osx
- 
+
+
 before_install:
-  - curl https://sh.rustup.rs -sSf | sh -s -- -y
+  - curl https://build.travis-ci.com/files/rustup-init.sh -sSf | sh -s -- -y
   - source $HOME/.cargo/env
   - . $HOME/.cargo/env
   - export PATH=$HOME/.cargo/bin:$PATH
@@ -24,6 +33,7 @@ install:
     #   - python setup.py bdist
     #   - python setup.py bdist_wheel
   - python setup.py install
-  - pip install .
+    #   - python -c 'import smb'
+  - pip install -e .
   - python -c 'import smb'
 

@@ -11,11 +11,11 @@ EXT = sys.platform == "darwin" and ".dylib" or ".so"
 
 def vendor_rust_deps():
     try:
-        print("trying to run subprocess")
         subprocess.run("cargo --version".split(" "))
-        print("ran subprocess")
     except (FileNotFoundError, subprocess.CalledProcessError):
+        print("This regularly fails. Make sure you have Rust installed")
         os.system("curl https://sh.rustup.rs -sSf | sh -s -- -y")
+        os.system("source $HOME/.cargo/env")
         os.system(". $HOME/.cargo/env")
         os.system("export PATH=$HOME/.cargo/bin:$PATH")
         # ps = subprocess.Popen(
