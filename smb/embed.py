@@ -1,6 +1,9 @@
 import ctypes
+import sys
 import numpy as np
 from scipy.sparse import csr_matrix
+
+EXT = sys.platfrom == "darwin" and ".dylib" or ".so"
 
 # lib.process()
 
@@ -51,7 +54,7 @@ import os
 my_path = os.path.abspath(os.path.dirname(__file__))
 print(my_path)
 
-path = os.path.join(my_path, "target/%s/libhicrs.so")
+path = os.path.join(my_path, "target/%s/libhicrs" + EXT)
 print(path)
 
 
