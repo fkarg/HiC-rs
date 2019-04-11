@@ -75,8 +75,11 @@ setup(
     author_email="kargf@informatik.uni-freiburg.de",
     license="GPLv3",
     packages=find_packages(),
+    package_dir={"smb": "smb"},
     include_package_data=True,
-    package_data={"": ["smb/target/release/libhicrs" + EXT, "smb/target/debug/libhicrs" + EXT]},
+    package_data={
+        "smb": ["target/release/libhicrs" + EXT, "target/debug/libhicrs" + EXT]
+    },
     zip_safe=False,
     #       platforms='any',
     install_requires=requirements,
