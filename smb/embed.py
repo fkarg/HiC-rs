@@ -1,4 +1,5 @@
 import ctypes
+import os
 import sys
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -49,13 +50,8 @@ def void_array_to_list(array, _func=None, _args=None):
     return [a[i] for i in range(l)]
 
 
-import os
-
 my_path = os.path.abspath(os.path.dirname(__file__))
-print(my_path)
-
 path = os.path.join(my_path, "target/%s/libhicrs" + EXT)
-print(path)
 
 
 try:
