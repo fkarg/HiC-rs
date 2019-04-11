@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from scipy.sparse import csr_matrix
 
-EXT = sys.platfrom == "darwin" and ".dylib" or ".so"
+EXT = sys.platform == "darwin" and ".dylib" or ".so"
 
 # lib.process()
 
