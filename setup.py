@@ -76,7 +76,7 @@ setup(
     license="GPLv3",
     packages=find_packages(),
     include_package_data=True,
-    package_data={"": ["smb/target/release/*" + EXT, "smb/target/debug/*" + EXT]},
+    package_data={"": ["smb/target/release/libhicrs" + EXT, "smb/target/debug/libhicrs" + EXT]},
     zip_safe=False,
     #       platforms='any',
     install_requires=requirements,
