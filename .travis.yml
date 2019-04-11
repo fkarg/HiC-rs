@@ -35,5 +35,7 @@ install:
   - python setup.py install
     #   - python -c 'import smb'
   - pip install -e .
+
+script:
   - python -c 'import smb'
 
