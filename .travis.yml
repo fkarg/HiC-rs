@@ -14,6 +14,12 @@ matrix:
       language: shell
 
 
+cache:
+  directories:
+    - $HOME/.cargo
+    - $HOME/.rustup
+
+
 
 before_install:
   - curl https://build.travis-ci.com/files/rustup-init.sh -sSf | sh -s -- -y
@@ -37,5 +43,11 @@ install:
   - pip3 install -e .
 
 script:
-  - python3 -c 'import smb'
+  - python3 -c "import smb"
+
+allow_failures:
+  script:
+    - pip3 uninstall smb
+    - pip3 install .
+    - python3 -c "import smb"
 
