@@ -52,5 +52,8 @@ install:
   - pip3 install .
 
 script:
-  - python3 -c "import smb"
+  - cd TRAVIS_HOME && python3 -c "import smb"
+  - cargo test
+    # not yet for travis adopted:
+    # - python3 -m pytest test.py
 
