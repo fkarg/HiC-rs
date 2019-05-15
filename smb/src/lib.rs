@@ -1,4 +1,4 @@
-// #![feature(type_ascription)]
+#![feature(type_ascription)]
 #![allow(dead_code)]
 #![allow(unused_attributes)]
 
@@ -147,6 +147,7 @@ impl<T: Num + Clone> CSRMatrix<T> {
         // giving it the element and the index (within that col)
     {
         let (ind_begin, ind_end) = (self.indptr[coln], self.indptr[coln + 1]);
+        // let indices = &self.indices[ind_begin..(ind_end - 1)];
         let indices = &self.indices[ind_begin..ind_end];
         // let mut slice: &mut [T] = &mut self.data[ind_begin..ind_end];
         // let mut inter: Vec<T> = slice.iter_mut().zip(indices).map(|(d, i)| f(i, d)).collect();
@@ -155,9 +156,9 @@ impl<T: Num + Clone> CSRMatrix<T> {
         // slice = inter.as_mut_slice();
         // self.data[ind_begin..ind_end] = &*inter.as_mut_slice();
 
-        println!("Begin at: {}", ind_begin);
-        for index in dbg!(indices) {
-            self.data[ind_begin + index] = f(index, &self.data[ind_begin + index]);
+        // println!("Begin at: {}", ind_begin);
+        for index in 0..indices.len() {
+            self.data[self.indptr[coln] + index] = f(&index, &self.data[self.indptr[coln] + index]);
         }
     }
 
@@ -172,10 +173,10 @@ impl<T: Num + Clone> CSRMatrix<T> {
         let _inter: Vec<_> = slice.iter().zip(indices).map(|(d, i)| f(i, d)).collect();
     }
 
-    fn get_col(&self, coln: usize) -> Vec<T> {
+    fn get_col(&self, coln: usize, zero: T) -> Vec<T> {
         let size = self.indptr.len() - 1;
         let (ind_begin, ind_end) = (self.indptr[coln], self.indptr[coln + 1]);
-        let mut col = vec![zero(); size];
+        let mut col = vec![zero; size];
 
         let slice = self.indices[ind_begin..ind_end].to_vec();
         for i in 0..slice.len() {
@@ -185,13 +186,12 @@ impl<T: Num + Clone> CSRMatrix<T> {
         col
     }
 
-    // fn new(
     fn to_vec(&self) -> Vec<Vec<T>> {
         let mut full = Vec::new();
 
         let size = self.indptr.len() - 1;
         for i in 0..size {
-            full.push(self.get_col(i));
+            full.push(self.get_col(i, zero()));
         }
 
         full
@@ -325,7 +325,9 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     //     exit(1)
 
     // let mut iternum = 0;
-    let mut s: Vec<f64> = Vec::with_capacity(dbg!(matrix.length));
+    let mut s: Vec<f64> = Vec::with_capacity(matrix.length);
+
+    println!("{:?}", matrix);
 
     // DONE
     // for iternum in range(M):
@@ -333,12 +335,17 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     //     mask = (s == 0)
     //     s = s / np.mean(s[~mask])
     for _i in 0..m {
+        println!("zero: {}", zero(): f64);
         println!("[iteration]: {}", _i);
         for c in 0..matrix.length {
-            s.push(matrix.get_col(c).iter().sum());
+            s.push(matrix.get_col(c, 0_f64).iter().sum());
+            println!("{:?}, sum: {}", matrix.get_col(c, 0_f64), s[c]);
         }
-        let s_sum: f64 = s.iter().sum();
+        s.iter().enumerate().filter(|(_i, &v)| v.is_infinite()).for_each(|(i, _)| println!("Found Inf at: {}", i));
+        let s_sum: f64 = dbg!(s.iter().sum());
         let mean: f64 = ((s.len() as f64) / s_sum) as f64; // inverse of: S_i / mean(S_i)
+        dbg!(s.len());
+        dbg!(mean);
         s = s.iter().map(|&v: &f64| v * mean).collect();
 
         //  DONE
@@ -349,7 +356,8 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         // biases = biases.iter().zip(s.clone()).map(|(a, b)| a * b).collect();
         // let deviation: f64 = s.iter().fold(0_f64, |a, b| a.max((b - 1.).abs()));
         let deviation: f64 = s.iter().fold(0_f64, |a, b| a.max((b - 1.).abs()));
-        s = s.iter().map(|&v| 1.0 / v).collect();
+        dbg!(deviation);
+        s = dbg!(s).iter().map(|&v| 1.0 / v).collect();
 
         // DONE
         // # The following code  is an optimization of this
@@ -367,13 +375,13 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         for coln in 0..matrix.length {
             let c = s[coln];
             if coln == 0 {
-                println!("Before updating values");
-                matrix.map_col_dbg(0, |&_i, &v| println!("v: {}, s[i]: {}", v, s[_i]));
+                println!("Before updating values, c: {}", c);
+                matrix.map_col_dbg(0, |&i, &v| println!("v: {}, s[i]: {}", v, s[i]));
             }
             matrix.map_col(coln, |&i, v| v * c * s[i]);
             if coln == 0 {
                 println!("After updating the values");
-                matrix.map_col_dbg(0, |&_i, &v| println!("v: {}, i: {}", v, _i));
+                matrix.map_col_dbg(0, |&i, &v| println!("v: {}, i: {}", v, i));
             }
             // let row_index = matrix.indices[begin_index..];
             // matrix.get_col_iter(coln).mut_iter().map
@@ -407,6 +415,8 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     //               "filtering of bins.")
     //     exit(1)
 
+    s.clear();
+
     let (s, c) = biases
         .iter()
         .filter(|&v| *v > 0.0)
@@ -433,10 +443,11 @@ pub mod tests {
 
     #[test]
     pub fn test_iterative_correct() {
-        let indptr = vec![0, 2, 4, 6, 7];
-        let indices = vec![0, 1, 1, 2, 2, 3, 3];
-        let data = vec![1., 1., 2., 1., 3., 1., 4.];
+        let indptr = vec![0, 1, 1, 1, 1, 2, 3, 3, 3, 3, 4];
+        let indices = vec![5, 4, 0, 9];
+        let data = vec![1., 1., 1., 1.];
         let matrix = CSRMatrix::new(indptr, indices, data);
+        println!("{:?}", matrix);
         let e = iterative_correction(matrix);
         println!("{:?}", e);
     }
