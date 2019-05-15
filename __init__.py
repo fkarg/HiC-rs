@@ -1,1 +1,1 @@
-from .smb import embed
+from smb import embed
