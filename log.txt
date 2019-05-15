@@ -1,3 +1,34 @@
+Meeting 2019-05-13
+- Set up tests on travis
+
+Meeting 2019-05-04
+
+Meeting 2019-04-30
+Next steps:
+- make packages (+ milksnake)
+- Testcases
+- automated test setup
+
+only afterwards:
+- integrate in HiCExplorer
+- only afterwards: start to optimize
+
+
+
+Variablen-Namensschema überlegen für Python & Rust
+
+
+Meeting 2019-04-08
+- Automatically fully compile before creating package (also rust part!!)
+- Build bridge for MacOS (/Windows)
+- test with Travis
+    - requirements.txt
+    - list requirements in setup.py (read in requirements.txt)
+- Erstelle Bioconda-Paket
+- Use moar virtual environments
+- Implementiere eigentlichen Algorithmus
+
+
 
 
 Meeting 2019-04-01
