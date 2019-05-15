@@ -36,6 +36,14 @@ class FFIArray(ctypes.Structure):
     def __len__(self):
         return self.len
 
+class FFIFloatArray(FFIArray):
+    # Wrap sequence of values. You can specify another type besides a
+    # 32-bit unsigned integer.
+    def __init__(self, seq, data_type=ctypes.c_double):
+        array_type = data_type * len(seq)
+        raw_seq = array_type(*seq)
+        self.data = ctypes.cast(raw_seq, ctypes.c_void_p)
+        self.len = len(seq)
 
 # A conversion function that cleans up the result value to make it
 # nicer to consume.
@@ -51,6 +59,7 @@ def void_array_to_list(array, _func=None, _args=None):
 
 
 my_path = os.path.abspath(os.path.dirname(__file__))
+
 path = os.path.join(my_path, "target/%s/libhicrs" + EXT)
 
 
@@ -69,6 +78,7 @@ lib.listtest.errcheck = void_array_to_list
 # lib.listtest.argtypes = (ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t)
 # lib.listtest.restype = (ctypes.POINTER(ctypes.c_int32), ctypes.c_size_t)
 # lib.listtest.errcheck = void_array_to_tuple_list
+listtest = lib.listtest
 
 list_to_sum = [1, 2, 3, 4]
 
@@ -79,7 +89,6 @@ def cast_c(l):
 
 # l = lib.listtest(cast_c(list_to_sum), len(list_to_sum))
 l = lib.listtest(list_to_sum)
-print(l)
 
 
 row = np.array([0, 0, 1, 2, 2, 2])
@@ -88,14 +97,24 @@ data = np.array([1, 2, 3, 4, 5, 6])
 
 
 matrix = csr_matrix((data, (row, col)), shape=(3, 3))
+matrix2 = csr_matrix((
+    [ 1, 1, 2, 1, 3, 1, 4],
+    ([0, 0, 1, 1, 2, 2, 3]
+    ,[0, 1, 1, 2, 2, 3, 3])),
+    shape=(4,4))
 
 assert list(matrix.indptr) == list(np.array([0, 2, 3, 6]))
 assert list(matrix.indices) == list(np.array([0, 2, 2, 0, 1, 2]))
 
 
-lib.csrtest.argtypes = FFIArray, FFIArray, FFIArray
+lib.csrtest.argtypes = FFIArray, FFIArray, FFIFloatArray
 lib.csrtest.restype = FFIArray
 lib.csrtest.errcheck = void_array_to_list
 
-e = lib.csrtest(matrix.indptr, matrix.indices, matrix.data)
-print(e)
+def iterative_correct(matrix: csr_matrix) -> list:
+    return lib.csrtest(matrix.indptr, matrix.indices, matrix.data)
+
+# e = iterative_correct(matrix)
+
+
+
