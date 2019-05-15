@@ -1,4 +1,4 @@
-#![feature(type_ascription)]
+// #![feature(type_ascription)]
 #![allow(dead_code)]
 #![allow(unused_attributes)]
 
@@ -335,7 +335,6 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     //     mask = (s == 0)
     //     s = s / np.mean(s[~mask])
     for _i in 0..m {
-        println!("zero: {}", zero(): f64);
         println!("[iteration]: {}", _i);
         for c in 0..matrix.length {
             s.push(matrix.get_col(c, 0_f64).iter().sum());
