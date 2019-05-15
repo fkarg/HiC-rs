@@ -14,8 +14,13 @@ Cargo.lock
 .*.sw*
 
 # python package build stuff
+MANIFEST
 /dist/
 /build/
 *.egg-info
 
+
+.*
+# python caches
+__pycache__
 
