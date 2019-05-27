@@ -33,11 +33,11 @@ cache:
 
 before_install:
   - curl https://build.travis-ci.com/files/rustup-init.sh -sSf | sh -s -- -y
-  - rustup self update
-  - rustup update
   - source $HOME/.cargo/env
   - . $HOME/.cargo/env
   - export PATH=$HOME/.cargo/bin:$PATH
+  - rustup self update
+  - rustup update
 
 
 install:
@@ -54,6 +54,8 @@ install:
   - pip3 install .
 
 script:
+  - pwd
+  - ls
   - cd $TRAVIS_HOME && python3 -c "import smb"
   - cd smb && cargo test
     # not yet for travis adopted:
