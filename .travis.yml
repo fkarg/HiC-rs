@@ -33,6 +33,8 @@ cache:
 
 before_install:
   - curl https://build.travis-ci.com/files/rustup-init.sh -sSf | sh -s -- -y
+  - rustup self update
+  - rustup update
   - source $HOME/.cargo/env
   - . $HOME/.cargo/env
   - export PATH=$HOME/.cargo/bin:$PATH
