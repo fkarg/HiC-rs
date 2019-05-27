@@ -120,6 +120,15 @@ pub extern "C" fn convert_vec(lon: Array, lat: Array) -> Array {
     Array::from_vec(vec)
 }
 
+
+fn invert_if_not_zero(num: f64) -> f64 {
+    if num == 0. {
+        num
+    } else {
+        1.0 / num
+    }
+}
+
 #[repr(C)]
 #[derive(Debug)]
 pub struct CSRMatrix<T> {
@@ -140,25 +149,19 @@ impl<T: Num + Clone> CSRMatrix<T> {
         }
     }
 
-    // #[allow(unused_assignments)]
     fn map_col<F>(&mut self, coln: usize, f: F)
     where
         F: Fn(&usize, &T) -> T,
         // giving it the element and the index (within that col)
     {
         let (ind_begin, ind_end) = (self.indptr[coln], self.indptr[coln + 1]);
-        // let indices = &self.indices[ind_begin..(ind_end - 1)];
         let indices = &self.indices[ind_begin..ind_end];
-        // let mut slice: &mut [T] = &mut self.data[ind_begin..ind_end];
-        // let mut inter: Vec<T> = slice.iter_mut().zip(indices).map(|(d, i)| f(i, d)).collect();
 
-        // #[allow(unused_assignments)]
-        // slice = inter.as_mut_slice();
-        // self.data[ind_begin..ind_end] = &*inter.as_mut_slice();
-
-        // println!("Begin at: {}", ind_begin);
-        for index in 0..indices.len() {
-            self.data[self.indptr[coln] + index] = f(&index, &self.data[self.indptr[coln] + index]);
+        // for index in 0..indices.len() {
+            // let row_index = indices[index];
+        for (index, row_index) in indices.iter().enumerate() {
+            let data_index = self.indptr[coln] + index;
+            self.data[data_index] = f(&row_index, &self.data[data_index]);
         }
     }
 
@@ -251,7 +254,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         matrix.data = matrix.data.iter().map(|&v| 0_f64.max(v)).collect();
     }
 
-    let m = 50;
+    let m = 150;
     let tolerance = 1e-5;
 
     // Description of algorithm from paper:
@@ -327,7 +330,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     // let mut iternum = 0;
     let mut s: Vec<f64> = Vec::with_capacity(matrix.length);
 
-    println!("{:?}", matrix);
+    // println!("{:?}", matrix);
 
     // DONE
     // for iternum in range(M):
@@ -335,17 +338,22 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     //     mask = (s == 0)
     //     s = s / np.mean(s[~mask])
     for _i in 0..m {
+    // for _i in 0..m {
         println!("[iteration]: {}", _i);
         for c in 0..matrix.length {
             s.push(matrix.get_col(c, 0_f64).iter().sum());
-            println!("{:?}, sum: {}", matrix.get_col(c, 0_f64), s[c]);
+            // if c < 5 {
+                // matrix.map_col_dbg(c, |&i, v| println!("i: {}, v: {}, s[c]: {}", i, v, s[c]));
+                // println!("{:?}, sum: {}", matrix.get_col(c, 0_f64), s[c]);
+            // }
         }
-        s.iter().enumerate().filter(|(_i, &v)| v.is_infinite()).for_each(|(i, _)| println!("Found Inf at: {}", i));
-        let s_sum: f64 = dbg!(s.iter().sum());
+        // DEBUG:
+        // s.iter().enumerate().filter(|(_i, &v)| v.is_infinite()).for_each(|(i, _)| println!("Found Inf at: {}", i));
+        let s_sum: f64 = s.iter().sum();
         let mean: f64 = ((s.len() as f64) / s_sum) as f64; // inverse of: S_i / mean(S_i)
-        dbg!(s.len());
         dbg!(mean);
-        s = s.iter().map(|&v: &f64| v * mean).collect();
+        s = s.iter().map(|&v: &f64| v * mean).collect(); // would have been v / mean, but the mean is the inverse already.
+        let _test: Vec<&f64> = dbg!(s.iter().take(10).collect());
 
         //  DONE
         // total_bias *= s
@@ -356,7 +364,8 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         // let deviation: f64 = s.iter().fold(0_f64, |a, b| a.max((b - 1.).abs()));
         let deviation: f64 = s.iter().fold(0_f64, |a, b| a.max((b - 1.).abs()));
         dbg!(deviation);
-        s = dbg!(s).iter().map(|&v| 1.0 / v).collect();
+
+        s = s.iter().map(|&v| invert_if_not_zero(v)).collect();
 
         // DONE
         // # The following code  is an optimization of this
@@ -371,19 +380,19 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         // 'Generate' the index, from this multiply the s-value accordingly.
         // Also, for each col, have the other s-value (s[j]) cached for multiplication.
 
-        for coln in 0..matrix.length {
-            let c = s[coln];
-            if coln == 0 {
+        // for coln in 0..matrix.length {
+        println!("Lens: s: {} m: {}", s.len(), matrix.length);
+        for (coln, c) in s.iter().enumerate().take(matrix.length) {
+            // let c = s[coln];
+            if coln < 3 {
                 println!("Before updating values, c: {}", c);
-                matrix.map_col_dbg(0, |&i, &v| println!("v: {}, s[i]: {}", v, s[i]));
+                matrix.map_col_dbg(coln, |&i, &v| println!("v: {}, s[i]: {}", v, s[i]));
             }
             matrix.map_col(coln, |&i, v| v * c * s[i]);
-            if coln == 0 {
-                println!("After updating the values");
-                matrix.map_col_dbg(0, |&i, &v| println!("v: {}, i: {}", v, i));
+            if coln < 3 {
+                println!("After updating the values, coln {}", coln);
+                matrix.map_col_dbg(coln, |&i, &v| println!("v: {}, i: {}", v, i));
             }
-            // let row_index = matrix.indices[begin_index..];
-            // matrix.get_col_iter(coln).mut_iter().map
         }
         // DONE
         // if np.any(W.data > 1e100):
@@ -392,6 +401,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         //               "filtering of bins.")
         //     exit(1)
         if matrix.data.iter().any(|&v| v > 1e100) {
+            println!("{:?}", matrix);
             panic!("Error: matrix correction is producing extremely large values.")
         }
 
@@ -401,6 +411,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
             println!("Deviation smaller tolerance! {} < {}", deviation, tolerance);
             break;
         }
+        s.clear();
     }
 
     // DONE
@@ -414,16 +425,14 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     //               "filtering of bins.")
     //     exit(1)
 
-    s.clear();
-
     let (s, c) = biases
         .iter()
         .filter(|&v| *v > 0.0)
         .fold((0_f64, 0_f64), |(s, c), i| (s + i, c + 1.));
     let corr = s / c;
-    let biases = biases.iter().map(|&v| v / corr).collect();
+    biases = biases.iter().map(|&v| v / corr ).collect();
 
-    println!("printing matrix data:");
+    // println!("printing matrix data:");
     for i in matrix.data {
         if i > 1e10 {
             panic!("Error: matrix correction produced extremely large values");
@@ -442,9 +451,23 @@ pub mod tests {
 
     #[test]
     pub fn test_iterative_correct() {
-        let indptr = vec![0, 1, 1, 1, 1, 2, 3, 3, 3, 3, 4];
-        let indices = vec![5, 4, 0, 9];
-        let data = vec![1., 1., 1., 1.];
+        // let indptr  = vec![0, 1, 2, 3, 5, 6, 7, 8, 10, 11, 12];
+        // let indices = vec![5 , 4 , 0 , 9 , 3 , 7 , 8 , 1 , 2 , 6, 3 , 4];
+        let indptr  = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let indices = vec![5 , 4 , 0 , 9 , 3 , 7 , 8 , 1 , 2 , 6];
+        let data    = vec![1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.];
+        let matrix = CSRMatrix::new(indptr, indices, data);
+        println!("{:?}", matrix);
+        let e = iterative_correction(matrix);
+        println!("{:?}", e);
+    }
+
+    #[test]
+    pub fn test_iterative_correct_2() {
+        let indptr = vec![0, 1, 1, 1, 1, 2, 3, 3, 3, 5, 6, 7, 7, 9, 9, 10, 11, 11, 13, 13, 16, 16, 17, 17, 17, 17, 19, 20, 23, 24, 25];
+        let indices = vec![5, 4, 0, 19, 25, 9, 12, 10, 14, 12, 19, 17, 25, 8, 15, 21, 19, 8, 17, 27, 26, 28, 29, 27, 27];
+        let data = vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+        // let data' = vec![0.6944444444444445, 0.6944444444444445, 0.6944444444444445, 0.34722222222222227, inf, 0.6944444444444445, 0.6944444444444445, 0.34722222222222227, inf, 0.6944444444444445, 0.6944444444444445, 0.34722222222222227, inf, 0.2314814814814815, inf, inf, 0.6944444444444445, 0.34722222222222227, inf, 0.6944444444444445, 0.2314814814814815, inf, inf, 0.6944444444444445, 0.6944444444444445];
         let matrix = CSRMatrix::new(indptr, indices, data);
         println!("{:?}", matrix);
         let e = iterative_correction(matrix);
