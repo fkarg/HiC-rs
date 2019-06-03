@@ -1,0 +1,2 @@
+https://github.com/deeptools/HiCExplorer/blob/master/hicexplorer/hicCorrectMatrix.py
+https://github.com/deeptools/HiCExplorer/blob/master/hicexplorer/iterativeCorrection.py

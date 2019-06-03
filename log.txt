@@ -1,3 +1,15 @@
+
+todo:
+    look if there is a deviation-bug (flipping between 1 and 10.sth)
+    in hicCorrectMatrix ice_rust hinzufügen und matrix als output irgendwo speichern, dann:
+    hicplotmatrix: Plotting chromosome ChR-1 18mio-22mio
+
+dependencies:
+    - add hicmatrix
+    - add rust
+
+
+
 Meeting 2019-05-13
 - Set up tests on travis
 

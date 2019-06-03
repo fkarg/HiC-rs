@@ -254,7 +254,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         matrix.data = matrix.data.iter().map(|&v| 0_f64.max(v)).collect();
     }
 
-    let m = 150;
+    let m = 50; // bis zu 500
     let tolerance = 1e-5;
 
     // Description of algorithm from paper:
@@ -381,7 +381,6 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         // Also, for each col, have the other s-value (s[j]) cached for multiplication.
 
         // for coln in 0..matrix.length {
-        println!("Lens: s: {} m: {}", s.len(), matrix.length);
         for (coln, c) in s.iter().enumerate().take(matrix.length) {
             // let c = s[coln];
             if coln < 3 {
