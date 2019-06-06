@@ -5,7 +5,10 @@
 
 extern crate libc;
 extern crate num;
+extern crate rayon;
 // extern crate backtrace;
+
+use rayon::prelude::*;
 
 
 use num::traits::{zero, Num};
@@ -15,6 +18,7 @@ use std::mem;
 use std::slice;
 
 use std::thread;
+
 
 // use backtrace::Backtrace;
 
@@ -58,8 +62,8 @@ fn listtest(array: Array) -> Array {
 
 #[repr(C)]
 pub struct Tuple {
-    a: libc::uint32_t,
-    b: libc::uint32_t,
+    a: u32,
+    b: u32,
 }
 
 #[derive(Debug)]
@@ -216,6 +220,7 @@ impl<T: Num + Clone> COOMatrix<T> {
 
 #[no_mangle]
 fn csrtest(indptr: Array, indices: Array, data: Array) -> Array {
+    rayon::ThreadPoolBuilder::new().num_threads(3).build_global().unwrap();
     let matrix = CSRMatrix::new(
         // indptr:
         unsafe { indptr.as_u32_slice() }
@@ -254,7 +259,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         matrix.data = matrix.data.iter().map(|&v| 0_f64.max(v)).collect();
     }
 
-    let m = 150;
+    let m = 50;
     let tolerance = 1e-5;
 
     // Description of algorithm from paper:
@@ -362,7 +367,19 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         biases = biases.iter().zip(s.clone()).map(|(a, b)| a * b).collect();
         // biases = biases.iter().zip(s.clone()).map(|(a, b)| a * b).collect();
         // let deviation: f64 = s.iter().fold(0_f64, |a, b| a.max((b - 1.).abs()));
-        let deviation: f64 = s.iter().fold(0_f64, |a, b| a.max((b - 1.).abs()));
+        // let deviation: f64 = s.par_iter().reduce(|| 0_f64, |a, b| a.max((b - 1.).abs()));
+        // let deviation: f64 = s.par_iter().fold_with(0_f64, |a, b| a.max((b - 1.).abs()));
+        // let deviation: f64 = s.par_iter()
+        let deviation: f64 = s.par_iter()
+            .cloned()
+            .map(|a| (a - 1_f64).abs())
+            .reduce(|| 0_f64, |a, b| a.max(b));
+            // .reduce(|| 0_f64, |a, b|
+            //         {
+            //         // println!("a: {} b: {} abs(b-1): {} max(a,b): {}", a, b, (b-1_f64).abs(), a.max((b - 1_f64).abs()));
+            //         a.max((b - 1_f64).abs())});
+            // .fold(0_f64, |a, b| a.max((b - 1.).abs()));
+        println!("deviation: {}", deviation);
         dbg!(deviation);
 
         s = s.iter().map(|&v| invert_if_not_zero(v)).collect();
@@ -381,7 +398,6 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         // Also, for each col, have the other s-value (s[j]) cached for multiplication.
 
         // for coln in 0..matrix.length {
-        println!("Lens: s: {} m: {}", s.len(), matrix.length);
         for (coln, c) in s.iter().enumerate().take(matrix.length) {
             // let c = s[coln];
             if coln < 3 {
@@ -405,6 +421,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
             panic!("Error: matrix correction is producing extremely large values.")
         }
 
+        // DONE
         // if deviation < tolerance:
         //     break
         if deviation < tolerance {

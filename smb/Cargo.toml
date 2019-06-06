@@ -11,7 +11,8 @@ crate-type = ["dylib", "staticlib"]
 
 
 [dependencies]
-libc = "0.2.54"
+libc = "0.2.58"
 num = "0.2.0"
+rayon = "1.0.3"
 
 
