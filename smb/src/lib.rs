@@ -3,12 +3,13 @@
 #![allow(unused_attributes)]
 
 
-extern crate libc;
-extern crate num;
-extern crate rayon;
+// extern crate libc;
+// extern crate num;
+// extern crate rayon;
 // extern crate backtrace;
 
 use rayon::prelude::*;
+use std::fs;
 
 
 use num::traits::{zero, Num};
@@ -19,6 +20,8 @@ use std::slice;
 
 use std::thread;
 
+
+static THREAD_NUM: usize = 20;
 
 // use backtrace::Backtrace;
 
@@ -220,7 +223,7 @@ impl<T: Num + Clone> COOMatrix<T> {
 
 #[no_mangle]
 fn csrtest(indptr: Array, indices: Array, data: Array) -> Array {
-    rayon::ThreadPoolBuilder::new().num_threads(3).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new().num_threads(THREAD_NUM).build_global().unwrap();
     let matrix = CSRMatrix::new(
         // indptr:
         unsafe { indptr.as_u32_slice() }
@@ -250,16 +253,16 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     let mut biases = Vec::new();
     biases.resize(matrix.length, 1.0);
 
-    let sum: f64 = matrix.data.iter().sum();
-    if sum.is_nan() {
+    // let sum: f64 = matrix.data.par_iter().sum();
+    if matrix.data.par_iter().sum::<f64>().is_nan() {
         // TODO: log.warn
         println!(
             "[iterative correction] the matrix contains nans, they will be replaced by zeros."
         );
-        matrix.data = matrix.data.iter().map(|&v| 0_f64.max(v)).collect();
+        matrix.data = matrix.data.par_iter().map(|&v| 0_f64.max(v)).collect();
     }
 
-    let m = 50;
+    let m = 500;
     let tolerance = 1e-5;
 
     // Description of algorithm from paper:
@@ -346,7 +349,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
     // for _i in 0..m {
         println!("[iteration]: {}", _i);
         for c in 0..matrix.length {
-            s.push(matrix.get_col(c, 0_f64).iter().sum());
+            s.push(matrix.get_col(c, 0_f64).par_iter().sum());
             // if c < 5 {
                 // matrix.map_col_dbg(c, |&i, v| println!("i: {}, v: {}, s[c]: {}", i, v, s[c]));
                 // println!("{:?}, sum: {}", matrix.get_col(c, 0_f64), s[c]);
@@ -357,14 +360,14 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         let s_sum: f64 = s.iter().sum();
         let mean: f64 = ((s.len() as f64) / s_sum) as f64; // inverse of: S_i / mean(S_i)
         dbg!(mean);
-        s = s.iter().map(|&v: &f64| v * mean).collect(); // would have been v / mean, but the mean is the inverse already.
+        s = s.par_iter().map(|&v: &f64| v * mean).collect(); // would have been v / mean, but the mean is the inverse already.
         let _test: Vec<&f64> = dbg!(s.iter().take(10).collect());
 
         //  DONE
         // total_bias *= s
         // deviation = np.abs(s - 1).max()
         // s = 1.0 / s
-        biases = biases.iter().zip(s.clone()).map(|(a, b)| a * b).collect();
+        biases = biases.par_iter().zip(s.clone()).map(|(a, b)| a * b).collect();
         // biases = biases.iter().zip(s.clone()).map(|(a, b)| a * b).collect();
         // let deviation: f64 = s.iter().fold(0_f64, |a, b| a.max((b - 1.).abs()));
         // let deviation: f64 = s.par_iter().reduce(|| 0_f64, |a, b| a.max((b - 1.).abs()));
@@ -382,7 +385,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         println!("deviation: {}", deviation);
         dbg!(deviation);
 
-        s = s.iter().map(|&v| invert_if_not_zero(v)).collect();
+        s = s.par_iter().map(|&v| invert_if_not_zero(v)).collect();
 
         // DONE
         // # The following code  is an optimization of this
@@ -400,15 +403,15 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         // for coln in 0..matrix.length {
         for (coln, c) in s.iter().enumerate().take(matrix.length) {
             // let c = s[coln];
-            if coln < 3 {
-                println!("Before updating values, c: {}", c);
-                matrix.map_col_dbg(coln, |&i, &v| println!("v: {}, s[i]: {}", v, s[i]));
-            }
+            // if coln < 3 {
+            //     println!("Before updating values, c: {}", c);
+            //     matrix.map_col_dbg(coln, |&i, &v| println!("v: {}, s[i]: {}", v, s[i]));
+            // }
             matrix.map_col(coln, |&i, v| v * c * s[i]);
-            if coln < 3 {
-                println!("After updating the values, coln {}", coln);
-                matrix.map_col_dbg(coln, |&i, &v| println!("v: {}, i: {}", v, i));
-            }
+            // if coln < 3 {
+            //     println!("After updating the values, coln {}", coln);
+            //     matrix.map_col_dbg(coln, |&i, &v| println!("v: {}, i: {}", v, i));
+            // }
         }
         // DONE
         // if np.any(W.data > 1e100):
@@ -430,6 +433,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         }
         s.clear();
     }
+    drop(s);
 
     // DONE
     // # scale the total bias such that the sum is 1.0
@@ -447,15 +451,16 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>) -> Array {
         .filter(|&v| *v > 0.0)
         .fold((0_f64, 0_f64), |(s, c), i| (s + i, c + 1.));
     let corr = s / c;
-    biases = biases.iter().map(|&v| v / corr ).collect();
+    biases = biases.par_iter().map(|&v| v / corr ).collect();
 
     // println!("printing matrix data:");
-    for i in matrix.data {
+    for i in matrix.data.clone() {
         if i > 1e10 {
             panic!("Error: matrix correction produced extremely large values");
         }
         // println!("{}", i);
     }
+    fs::write("tmpMatrix", format!("{:?}", matrix)).expect("Unable to write file");
 
     Array::from_vec(biases)
 }
