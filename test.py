@@ -1,12 +1,13 @@
-import warnings
+# import warnings
 import logging as log
-warnings.simplefilter(action="ignore", category=RuntimeWarning)
-warnings.simplefilter(action="ignore", category=PendingDeprecationWarning)
+# warnings.simplefilter(action="ignore", category=RuntimeWarning)
+# warnings.simplefilter(action="ignore", category=PendingDeprecationWarning)
 
 # from hicexplorer import hicCorrectMatrix
 from smb.embed import iterative_correct
 from hicmatrix import HiCMatrix as hm
 from tempfile import NamedTemporaryFile
+import pickle
 import os
 import numpy as np
 import numpy.testing as nt
@@ -16,15 +17,22 @@ from hicexplorer.utilities import convertNansToZeros, convertInfsToZeros
 from hicexplorer.hicCorrectMatrix import filter_by_zscore, MAD
 from scipy.sparse import lil_matrix
 
+import time
 
 
-ROOT = "/datadisk/Coding/HiCExplorer/hicexplorer/test/test_data/"
+
+
+
+# ROOT = "/datadisk/Coding/HiCExplorer/hicexplorer/test/test_data/"
+ROOT = "/home/ubuntu/HDD/HiC-rs/matrices/"
+# ROOT = "/home/ubuntu/HDD/HiCExplorer/hicexplorer/test/test_data/"
 # TRAVIS_ROOT = "/datadisk/Coding/HiCExplorer/hicexplorer/test/test_data/"
 
 def main(outfile):
-    print('loading matrix and stuff')
+    start = time.time()
+    log.info('loading matrix and stuff')
     # matrix_filename = ROOT + "small_test_matrix.h5"
-    matrix_filename = ROOT + "foo.h5"
+    matrix_filename = ROOT + "matrix_smaller.h5"
 
     # args.chromosomes
     ma = hm.hiCMatrix(matrix_filename, pChrnameList="chrUextra chr3LHet")
@@ -65,9 +73,17 @@ def main(outfile):
 
     # ma.matrix.resize((30, 30))
 
-    print('actually correcting now!')
+
+    before = time.time()
+    log.info("Time duration: {}".format(str(before - start)))
+
+    log.info('actually correcting now!')
     correction_factors = iterative_correct(ma.matrix)
-    print('done correcting!')
+    log.info('done correcting!')
+
+
+    after = time.time()
+    log.info("Time duration: {}, {}".format(str(after - start), str(after - before)))
 
     W = ma.matrix.tocoo()
     W.data *= np.take(correction_factors, W.row)
@@ -75,6 +91,8 @@ def main(outfile):
 
 
     corrected_matrix = W.tocsr()
+
+    del(W)
 
     ma.setMatrixValues(corrected_matrix)
     ma.setCorrectionFactors(correction_factors)
@@ -84,13 +102,25 @@ def main(outfile):
     ma.printchrtoremove(sorted(list(total_filtered_out)),
                         label="Total regions to be removed", restore_masked_bins=False)
 
+    end = time.time()
+    log.info("Time duration: {}, {}, {}".format(str(end - start), str(end - after), str(end - before)))
+
+    # with open('matrtix.dump', 'rb') as f:
+    #     <variable> = pickle.load(f)
+    # with open('matrix.dump', 'wb') as f:
+    #     pickle.dump(ma, f)
+
+
+    ma.save(ROOT + "eigene.h5", pApplyCorrection=False)
     ma.save(outfile.name, pApplyCorrection=False)
 
 
 
 def test_correct_matrix_ICE_RUST():
+    log.info('starting test.')
     outfile = NamedTemporaryFile(suffix='.ICE.h5', delete=False)
     outfile.close()
+    log.info('created outfile')
 
     # args = "correct --matrix {} --correctionMethod ICE --chromosomes "\
     #        "chrUextra chr3LHet --iterNum 500  --outFileName {} "\
