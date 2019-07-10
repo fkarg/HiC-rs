@@ -17,7 +17,10 @@ def vendor_rust_deps():
         os.system("source $HOME/.cargo/env")
         os.system(". $HOME/.cargo/env")
         os.system("export PATH=$HOME/.cargo/bin:$PATH")
-        print("Installing Rust might have failed. Make sure you have Rust installed, and in your PATH.", file=sys.stderr)
+        print(
+            "Installing Rust might have failed. Make sure you have Rust installed, and in your PATH.",
+            file=sys.stderr,
+        )
         print("Check with 'cargo --version' and 'rustc --version'", file=sys.stderr)
         # ps = subprocess.Popen(
         #     "curl https://sh.rustup.rs -sSf".split(" "),

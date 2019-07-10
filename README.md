@@ -1,5 +1,7 @@
 # HiC-rs
 [![Build Status](https://travis-ci.com/fkarg/HiC-rs.svg?branch=master)](https://travis-ci.com/fkarg/HiC-rs)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
+
 
 This part is the python-rust interface for the iterative matrix correction
 
