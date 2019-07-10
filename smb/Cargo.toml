@@ -1,6 +1,6 @@
 [package]
 name = "hicrs"
-version = "0.1.1"
+version = "0.1.3"
 authors = ["fkarg <f.karg10@gmail.com>"]
 edition = "2018"
 

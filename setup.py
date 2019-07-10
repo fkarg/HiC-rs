@@ -72,7 +72,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="smb",
-    version="0.1.2",
+    version="0.1.3",
     description="Fast stochastic matrix balancing in Rust",
     url="http://github.com/fkarg/HiC-rs",
     author="Felix Karg",
