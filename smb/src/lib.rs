@@ -266,9 +266,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>, numiter: i32) -> Array {
             // .reduce(|| 0_f64, |a, b| a.max(b));
             .fold(0_f64, |a, b| a.max((b - 1.).abs()));
 
-
         s = s.iter().map(|&v| invert_if_not_zero(v)).collect();
-
 
         // Iterate through all cols, and through the data in each col.
         // 'Generate' the index, from this multiply the s-value accordingly.
@@ -285,7 +283,6 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>, numiter: i32) -> Array {
         //     // println!("{:?}", matrix);
         //     panic!("Error: matrix correction is producing extremely large values.")
         // }
-
 
         if deviation < tolerance {
             println!("Deviation smaller tolerance! {} < {}", deviation, tolerance);
@@ -321,7 +318,6 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>, numiter: i32) -> Array {
         .fold((0_f64, 0_f64), |(s, c), i| (s + i, c + 1.));
     let corr = s / c;
     let biases = biases.iter().map(|&v| v / corr).collect();
-
 
     Array::from_vec(biases)
 }

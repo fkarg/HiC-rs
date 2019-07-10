@@ -73,24 +73,23 @@ except Exception as e:
 assert lib, "Could not load Rust library. Is it compiled?"
 
 
-
 # now, since the lib is loaded, let us add our one function correctly.
 
 # fn csrtest(indptr: Array, indices: Array, data: Array, threads: i32) -> Array {
-lib.wrapper_iterative_correct.argtypes = FFIArray, FFIArray, FFIFloatArray, ctypes.c_uint32
-lib.wrapper_iterative_correct.restype = FFIFloatArray # warning: test !!
+lib.wrapper_iterative_correct.argtypes = (
+    FFIArray,
+    FFIArray,
+    FFIFloatArray,
+    ctypes.c_uint32,
+)
+lib.wrapper_iterative_correct.restype = FFIFloatArray  # warning: test !!
 lib.wrapper_iterative_correct.errcheck = void_array_to_double_list
 
 
-def iterative_correct(matrix: csr_matrix, iternum = 50) -> list:
-    return lib.wrapper_iterative_correct(matrix.indptr, matrix.indices, matrix.data, iternum)
-
-
-
-
-
-
-
+def iterative_correct(matrix: csr_matrix, iternum=50) -> list:
+    return lib.wrapper_iterative_correct(
+        matrix.indptr, matrix.indices, matrix.data, iternum
+    )
 
 
 # Further code, unrelated to smb directly but maybe relevant for understanding
@@ -113,9 +112,6 @@ def void_array_to_int_list(array, _func=None, _args=None):
     l = array.len
     a = ctypes.cast(array.data, ctypes.POINTER(ctypes.c_int))
     return [a[i] for i in range(l)]
-
-
-
 
 
 lib.listtest.argtypes = (FFIArray,)
@@ -149,7 +145,6 @@ def cast_c(l):
 
 # assert list(matrix.indptr) == list(np.array([0, 2, 3, 6]))
 # assert list(matrix.indices) == list(np.array([0, 2, 2, 0, 1, 2]))
-
 
 
 # e = iterative_correct(matrix, 1)
