@@ -1,6 +1,6 @@
 Schwierigkeiten in der Implementation:
 
-- Packages
+- Packages (milksnake etc)
 - small memory bug in rust (actually mut-changing the matrix)
 - bug regarding nans/infs
 - bug regarding termination (?)

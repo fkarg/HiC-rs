@@ -13,11 +13,12 @@ def vendor_rust_deps():
     try:
         subprocess.run("cargo --version".split(" "))
     except (FileNotFoundError, subprocess.CalledProcessError):
-        print("This regularly fails. Make sure you have Rust installed")
         os.system("curl https://sh.rustup.rs -sSf | sh -s -- -y")
         os.system("source $HOME/.cargo/env")
         os.system(". $HOME/.cargo/env")
         os.system("export PATH=$HOME/.cargo/bin:$PATH")
+        print("Installing Rust might have failed. Make sure you have Rust installed, and in your PATH.", file=sys.stderr)
+        print("Check with 'cargo --version' and 'rustc --version'", file=sys.stderr)
         # ps = subprocess.Popen(
         #     "curl https://sh.rustup.rs -sSf".split(" "),
         #     stdout=subprocess.PIPE)
