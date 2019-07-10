@@ -335,7 +335,7 @@ pub mod tests {
         let data = vec![1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.];
         let matrix = CSRMatrix::new(indptr, indices, data);
         println!("{:?}", matrix);
-        let e = iterative_correction(matrix);
+        let e = iterative_correction(matrix, 50);
         println!("{:?}", e);
     }
 
@@ -355,7 +355,7 @@ pub mod tests {
         ];
         let matrix = CSRMatrix::new(indptr, indices, data);
         println!("{:?}", matrix);
-        let e = iterative_correction(matrix);
+        let e = iterative_correction(matrix, 50);
         println!("{:?}", e);
     }
 
