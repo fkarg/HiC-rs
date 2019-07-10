@@ -291,18 +291,18 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>, numiter: i32) -> Array {
 
         // Printing information about current memory usage at the fifth
         // iteration. Here everything should have stabilized.
-        if _i == 5 {
-            let memusage = Command::new("free")
-                .arg("-g")
-                .output()
-                .expect("failed to execute process");
-            let var = String::from_utf8(memusage.stdout).unwrap();
-            let out: Vec<&str> = var.split_whitespace().collect();
-            let memfree = out[8];
-            let memused = out[9];
-            println!("Memory used: {}", memfree);
-            println!("Memory free: {}", memused);
-        }
+        // if _i == 5 {
+        //     let memusage = Command::new("free")
+        //         .arg("-g")
+        //         .output()
+        //         .expect("failed to execute process");
+        //     let var = String::from_utf8(memusage.stdout).unwrap();
+        //     let out: Vec<&str> = var.split_whitespace().collect();
+        //     let memfree = out[8];
+        //     let memused = out[9];
+        //     println!("Memory used: {}", memfree);
+        //     println!("Memory free: {}", memused);
+        // }
     }
     drop(s); // not needed any further, was only used for temporary biases
 
