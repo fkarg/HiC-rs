@@ -60,17 +60,17 @@ path = os.path.join(my_path, "target/%s/libhicrs" + EXT)
 
 try:
     lib = ctypes.cdll.LoadLibrary(path % "release")
-    print("using release rs")
+    # print("using release rs")
 except Exception as e:
     try:
         lib = ctypes.cdll.LoadLibrary(path % "debug")
-        print("using debug rs")
+        # print("using debug rs")
     except:
         lib = None
         pass
 
 
-assert lib, "Could not load Rust library. Is it compiled?"
+assert lib, "[HiCIterativeCorrection.smb]: Could not load Rust library. Is it compiled?"
 
 
 # now, since the lib is loaded, let us add our one function correctly.

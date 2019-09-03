@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use num::traits::{zero, Num};
 
 use std::mem;
@@ -242,7 +240,7 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>, numiter: i32) -> Array {
     let mut s: Vec<f64> = Vec::with_capacity(matrix.length);
 
     for _i in 0..numiter {
-        println!("[iteration]: {}", _i);
+        // println!("[iteration]: {}", _i);
         let mut s_sum: f64 = 0.0;
 
         for c in 0..matrix.length {
@@ -318,6 +316,8 @@ fn iterative_correction(mut matrix: CSRMatrix<f64>, numiter: i32) -> Array {
         .fold((0_f64, 0_f64), |(s, c), i| (s + i, c + 1.));
     let corr = s / c;
     let biases = biases.iter().map(|&v| v / corr).collect();
+    drop(matrix);
+    drop(corr);
 
     Array::from_vec(biases)
 }
